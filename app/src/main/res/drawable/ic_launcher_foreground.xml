@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Centered Luxury Charcoal Badge (Safe Zone: 54x54 centered at 54,54) -->
+    <path
+        android:fillColor="#1A1D1C"
+        android:pathData="M40,27 L68,27 A13,13 0 0,1 81,40 L81,68 A13,13 0 0,1 68,81 L40,81 A13,13 0 0,1 27,68 L27,40 A13,13 0 0,1 40,27 Z" />
+
+    <!-- Neon Lime Outer Border -->
+    <path
+        android:strokeColor="#C6FF00"
+        android:strokeWidth="1.8"
+        android:fillColor="#00000000"
+        android:pathData="M40,27 L68,27 A13,13 0 0,1 81,40 L81,68 A13,13 0 0,1 68,81 L40,81 A13,13 0 0,1 27,68 L27,40 A13,13 0 0,1 40,27 Z" />
+
+    <!-- Perfectly Centered 'GF' Monogram in Neon Lime (Height: 22dp, Y: 43..65, Width: 38dp, X: 35..73) -->
+
+    <!-- Letter 'G' -->
+    <path
+        android:fillColor="#C6FF00"
+        android:pathData="M49,43 L38,43 C35.8,43 34,44.8 34,47 L34,61 C34,63.2 35.8,65 38,65 L48,65 C50.2,65 52,63.2 52,61 L52,53 L44,53 L44,56.5 L48.2,56.5 L48.2,61.2 L37.8,61.2 L37.8,46.8 L49,46.8 Z" />
+
+    <!-- Letter 'F' -->
+    <path
+        android:fillColor="#C6FF00"
+        android:pathData="M56,43 L71,43 L71,46.8 L59.8,46.8 L59.8,52 L68.5,52 L68.5,55.5 L59.8,55.5 L59.8,65 L56,65 Z" />
+
+    <!-- Precision Accent Dot -->
+    <path
+        android:fillColor="#C6FF00"
+        android:pathData="M72.5,63.5 A1.8,1.8 0 1,1 72.5,65 A1.8,1.8 0 1,1 72.5,63.5 Z" />
+
+</vector>
