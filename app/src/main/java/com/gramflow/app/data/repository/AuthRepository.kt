@@ -14,7 +14,10 @@ class AuthRepository(private val userDao: UserDao) {
     val activeUserFlow: StateFlow<UserEntity?> = _sessionUser.asStateFlow()
 
     private var lastActiveTimestamp: Long = 0L
-    val INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000L // 30 Minutes
+
+    companion object {
+        private const val INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000L // 30 Minutes
+    }
 
     fun recordActivity() {
         lastActiveTimestamp = System.currentTimeMillis()

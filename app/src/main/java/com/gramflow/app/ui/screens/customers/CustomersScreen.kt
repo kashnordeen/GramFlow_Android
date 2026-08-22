@@ -1,7 +1,6 @@
 package com.gramflow.app.ui.screens.customers
 
 import android.content.Intent
-import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -27,7 +26,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Close
@@ -37,6 +35,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Tune
+import androidx.core.net.toUri
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -296,7 +295,7 @@ fun CustomersScreen(
                                             Row(
                                                 verticalAlignment = Alignment.CenterVertically,
                                                 modifier = Modifier.clickable {
-                                                    val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${customer.phone}"))
+                                                    val intent = Intent(Intent.ACTION_DIAL, "tel:${customer.phone}".toUri())
                                                     context.startActivity(intent)
                                                 }
                                             ) {
@@ -934,6 +933,27 @@ private fun CustomerLedgerStatementDialog(
                                 }
                             }
                         }
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    val context = LocalContext.current
+                    Button(
+                        onClick = {
+                            com.gramflow.app.util.PdfGenerator.generateCustomerLedgerPdf(context, stmt)
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(46.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = AccentLime,
+                            contentColor = BgDark
+                        ),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(Icons.Default.Description, contentDescription = null, tint = BgDark, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Export Statement (PDF)", fontWeight = FontWeight.Bold, color = BgDark, fontSize = 13.sp)
                     }
                 } ?: run {
                     Box(modifier = Modifier.fillMaxWidth().height(120.dp), contentAlignment = Alignment.Center) {

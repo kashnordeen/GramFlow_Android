@@ -8,7 +8,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.Calendar
@@ -16,13 +15,6 @@ import java.util.Calendar
 enum class TransactionFilter {
     ALL, TODAY, PAID, LOAN
 }
-
-data class TransactionSummaryMetrics(
-    val totalSalesCount: Int = 0,
-    val totalGramsSold: Double = 0.0,
-    val totalRevenue: Double = 0.0,
-    val totalLoansIssued: Double = 0.0
-)
 
 class TransactionsViewModel(
     private val inventoryRepo: InventoryRepository
@@ -33,15 +25,6 @@ class TransactionsViewModel(
 
     val allSales: StateFlow<List<SaleEntity>> = inventoryRepo.allSalesFlow
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-
-    val summaryMetrics: StateFlow<TransactionSummaryMetrics> = allSales.map { sales ->
-        TransactionSummaryMetrics(
-            totalSalesCount = sales.size,
-            totalGramsSold = sales.sumOf { it.gramsSold },
-            totalRevenue = sales.sumOf { it.amountReceived },
-            totalLoansIssued = sales.sumOf { it.balance }
-        )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), TransactionSummaryMetrics())
 
     val filteredSales: StateFlow<List<SaleEntity>> = combine(
         allSales,
@@ -83,6 +66,4 @@ class TransactionsViewModel(
             }
         }
     }
-
-    fun deleteSale(saleId: Long, onResult: (Boolean, String?) -> Unit) = rollbackSale(saleId, onResult)
 }

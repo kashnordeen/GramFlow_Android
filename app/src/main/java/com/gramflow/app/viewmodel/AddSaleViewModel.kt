@@ -72,6 +72,7 @@ class AddSaleViewModel(
     val lastSaleSummary: StateFlow<LastSaleSummary?> = _lastSaleSummary.asStateFlow()
 
     // Real-time Reactive Computation Flow
+    @Suppress("UNCHECKED_CAST")
     val computation: StateFlow<SaleComputation> = combine(
         gramsText,
         discountText,
