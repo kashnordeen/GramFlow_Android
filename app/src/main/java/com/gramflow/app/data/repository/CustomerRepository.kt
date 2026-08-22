@@ -37,6 +37,22 @@ class CustomerRepository(private val db: AppDatabase) {
         return Result.success(id)
     }
 
+    suspend fun updateCustomerDetails(customerId: Long, name: String, phone: String?): Result<Unit> {
+        val trimmedName = name.trim()
+        if (trimmedName.isBlank()) return Result.failure(Exception("Customer name cannot be empty"))
+
+        val customer = customerDao.getCustomerById(customerId)
+            ?: return Result.failure(Exception("Customer not found"))
+
+        customerDao.updateCustomer(
+            customer.copy(
+                name = trimmedName,
+                phone = phone?.trim()?.takeIf { it.isNotBlank() }
+            )
+        )
+        return Result.success(Unit)
+    }
+
     suspend fun recordPayment(customerId: Long, paymentAmount: Double): Result<Unit> {
         if (paymentAmount <= 0.0) return Result.failure(Exception("Payment amount must be greater than 0"))
 

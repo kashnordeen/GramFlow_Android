@@ -43,7 +43,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -66,6 +66,7 @@ fun DashboardScreen(
     onNavigateToSettings: () -> Unit,
     onLogout: () -> Unit
 ) {
+    val context = LocalContext.current
     val metrics by viewModel.metrics.collectAsState()
     val user by viewModel.activeUser.collectAsState()
     val isPrivacyVisible by viewModel.isPrivacyVisible.collectAsState()
@@ -94,8 +95,8 @@ fun DashboardScreen(
             user = user,
             onNavigateToSettings = onNavigateToSettings,
             onEditProfileClick = { showEditProfileDialog = true },
-            onExportLedgerClick = { /* Export */ },
-            onBackupDbClick = { /* Backup */ },
+            onExportLedgerClick = { viewModel.exportMasterPdf(context) },
+            onBackupDbClick = { viewModel.backupDatabase(context) },
             onLogoutClick = onLogout
         )
 

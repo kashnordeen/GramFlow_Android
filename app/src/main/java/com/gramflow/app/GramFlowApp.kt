@@ -2,6 +2,7 @@ package com.gramflow.app
 
 import android.app.Application
 import com.gramflow.app.data.local.AppDatabase
+import com.gramflow.app.data.local.DataSeeder
 import com.gramflow.app.data.repository.AuthRepository
 import com.gramflow.app.data.repository.CustomerRepository
 import com.gramflow.app.data.repository.InventoryRepository
@@ -17,5 +18,6 @@ class GramFlowApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        DataSeeder.seedIfEmpty(this, database)
     }
 }

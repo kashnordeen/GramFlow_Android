@@ -27,6 +27,11 @@ class InventoryRepository(private val db: AppDatabase) {
     private val saleDao = db.saleDao()
     private val settingsDao = db.settingsDao()
 
+    val database: AppDatabase get() = db
+    suspend fun getAllSales(): List<SaleEntity> = saleDao.getAllSales()
+    suspend fun getAllCustomers(): List<CustomerEntity> = customerDao.getAllCustomers()
+    suspend fun getTotalStock(): Double = stockBatchDao.getTotalRemainingStock() ?: 0.0
+
     val totalStockFlow: Flow<Double> = stockBatchDao.getTotalRemainingStockFlow().map { it ?: 0.0 }
     val allBatchesFlow: Flow<List<StockBatchEntity>> = stockBatchDao.getAllBatchesFlow()
     val allSalesFlow: Flow<List<SaleEntity>> = saleDao.getAllSalesFlow()

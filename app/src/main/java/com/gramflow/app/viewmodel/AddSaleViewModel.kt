@@ -12,8 +12,28 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+
+data class SaleComputation(
+    val grams: Double = 0.0,
+    val gross: Double = 0.0,
+    val discount: Double = 0.0,
+    val finalAmount: Double = 0.0,
+    val amountReceived: Double = 0.0,
+    val balance: Double = 0.0
+)
+
+data class LastSaleSummary(
+    val customerName: String,
+    val gramsSold: Double,
+    val grossAmount: Double,
+    val discount: Double,
+    val finalAmount: Double,
+    val amountReceived: Double,
+    val balance: Double
+)
 
 class AddSaleViewModel(
     private val inventoryRepo: InventoryRepository,
@@ -40,65 +60,112 @@ class AddSaleViewModel(
     var selectedBatchId = MutableStateFlow<Long?>(null)
     var commentsText = MutableStateFlow("")
 
+    // Optional Dynamic Rate Overrides
+    var overrideRatePerGram = MutableStateFlow("")
+    var overrideSpecial025 = MutableStateFlow("")
+    var overrideSpecial050 = MutableStateFlow("")
+
     private val _isSubmitting = MutableStateFlow(false)
     val isSubmitting: StateFlow<Boolean> = _isSubmitting.asStateFlow()
 
-    private val _saleSuccessEvent = MutableStateFlow(false)
-    val saleSuccessEvent: StateFlow<Boolean> = _saleSuccessEvent.asStateFlow()
+    private val _lastSaleSummary = MutableStateFlow<LastSaleSummary?>(null)
+    val lastSaleSummary: StateFlow<LastSaleSummary?> = _lastSaleSummary.asStateFlow()
 
-    fun calculateComputation(): Triple<Double, Double, Double> {
-        val g = gramsText.value.toDoubleOrNull() ?: 0.0
-        val d = discountText.value.toDoubleOrNull() ?: 0.0
-        val r = amountReceivedText.value.toDoubleOrNull() ?: 0.0
-        val currentSettings = settings.value
+    // Real-time Reactive Computation Flow
+    val computation: StateFlow<SaleComputation> = combine(
+        gramsText,
+        discountText,
+        amountReceivedText,
+        settings,
+        overrideRatePerGram,
+        overrideSpecial025,
+        overrideSpecial050
+    ) { params ->
+        val gText = params[0] as String
+        val dText = params[1] as String
+        val rText = params[2] as String
+        val rateSet = params[3] as RateSettings
+        val ovrRate = params[4] as String
+        val ovr025 = params[5] as String
+        val ovr050 = params[6] as String
+
+        val g = gText.toDoubleOrNull() ?: 0.0
+        val d = dText.toDoubleOrNull() ?: 0.0
+        val r = rText.toDoubleOrNull() ?: 0.0
+
+        val rPerGram = ovrRate.toDoubleOrNull() ?: rateSet.ratePerGram
+        val sp025 = ovr025.toDoubleOrNull() ?: rateSet.special025
+        val sp050 = ovr050.toDoubleOrNull() ?: rateSet.special050
 
         val gross = when {
-            g in 0.25..0.30 -> currentSettings.special025
-            g in 0.50..0.60 -> currentSettings.special050
-            else -> g * currentSettings.ratePerGram
+            g in 0.25..0.30 -> sp025
+            g in 0.50..0.60 -> sp050
+            else -> g * rPerGram
         }
         val finalAmount = maxOf(0.0, gross - d)
         val balance = maxOf(0.0, finalAmount - r)
-        return Triple(gross, finalAmount, balance)
-    }
+
+        SaleComputation(
+            grams = g,
+            gross = gross,
+            discount = d,
+            finalAmount = finalAmount,
+            amountReceived = r,
+            balance = balance
+        )
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SaleComputation())
 
     fun submitSale(onComplete: (Boolean, String?) -> Unit) {
         val custId = selectedCustomerId.value ?: return onComplete(false, "Please select a customer")
-        val g = gramsText.value.toDoubleOrNull() ?: return onComplete(false, "Invalid gram weight")
-        val d = discountText.value.toDoubleOrNull() ?: 0.0
-        val r = amountReceivedText.value.toDoubleOrNull() ?: return onComplete(false, "Enter amount received")
+        val currentComp = computation.value
 
-        val (gross, finalAmount, _) = calculateComputation()
+        if (currentComp.grams <= 0.0) return onComplete(false, "Please enter a valid gram weight")
+        val currentStock = totalStock.value
+        if (currentComp.grams > currentStock) return onComplete(false, "Insufficient stock available in vault")
+
+        val customer = customers.value.find { it.id == custId }
+        val custName = customer?.name ?: "Customer #$custId"
 
         viewModelScope.launch {
             _isSubmitting.value = true
             val result = inventoryRepo.recordSale(
                 customerId = custId,
-                gramsSold = g,
-                grossAmount = gross,
-                discount = d,
-                finalAmount = finalAmount,
-                amountReceived = r,
+                gramsSold = currentComp.grams,
+                grossAmount = currentComp.gross,
+                discount = currentComp.discount,
+                finalAmount = currentComp.finalAmount,
+                amountReceived = currentComp.amountReceived,
                 batchIdOverride = selectedBatchId.value,
                 comments = commentsText.value.takeIf { it.isNotBlank() }
             )
             _isSubmitting.value = false
 
             if (result.isSuccess) {
-                _saleSuccessEvent.value = true
+                // Save complete snapshot for the success modal
+                _lastSaleSummary.value = LastSaleSummary(
+                    customerName = custName,
+                    gramsSold = currentComp.grams,
+                    grossAmount = currentComp.gross,
+                    discount = currentComp.discount,
+                    finalAmount = currentComp.finalAmount,
+                    amountReceived = currentComp.amountReceived,
+                    balance = currentComp.balance
+                )
+
+                // Reset form fields
                 gramsText.value = ""
                 discountText.value = ""
                 amountReceivedText.value = ""
                 commentsText.value = ""
                 selectedBatchId.value = null
+                overrideRatePerGram.value = ""
+                overrideSpecial025.value = ""
+                overrideSpecial050.value = ""
+
                 onComplete(true, null)
             } else {
-                onComplete(false, result.exceptionOrNull()?.message)
+                onComplete(false, result.exceptionOrNull()?.message ?: "Failed to record sale")
             }
         }
-    }
-
-    fun resetSuccessEvent() {
-        _saleSuccessEvent.value = false
     }
 }

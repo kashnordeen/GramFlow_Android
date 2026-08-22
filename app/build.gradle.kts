@@ -70,6 +70,9 @@ dependencies {
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
 
+    // BCrypt for cross-platform web password verification
+    implementation("org.mindrot:jbcrypt:0.4")
+
     // Testing
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)

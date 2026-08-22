@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import androidx.sqlite.db.SupportSQLiteDatabase
 import com.gramflow.app.data.local.dao.CustomerDao
 import com.gramflow.app.data.local.dao.SaleDao
 import com.gramflow.app.data.local.dao.SettingsDao
@@ -16,9 +15,6 @@ import com.gramflow.app.data.local.entity.SaleEntity
 import com.gramflow.app.data.local.entity.SettingEntity
 import com.gramflow.app.data.local.entity.StockBatchEntity
 import com.gramflow.app.data.local.entity.UserEntity
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 @Database(
     entities = [
@@ -48,39 +44,12 @@ abstract class AppDatabase : RoomDatabase() {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
-                    "gramflow.db"
+                    "gramflow_v3.db"
                 )
-                    .addCallback(DatabaseCallback())
-                    .fallbackToDestructiveMigration()
+                    .fallbackToDestructiveMigration(true)
                     .build()
                 INSTANCE = instance
                 instance
-            }
-        }
-    }
-
-    private class DatabaseCallback : Callback() {
-        override fun onCreate(db: SupportSQLiteDatabase) {
-            super.onCreate(db)
-            INSTANCE?.let { database ->
-                CoroutineScope(Dispatchers.IO).launch {
-                    // Seed default pricing settings
-                    database.settingsDao().setSettings(
-                        listOf(
-                            SettingEntity("rate_per_gram", "1000"),
-                            SettingEntity("special_025_030", "250"),
-                            SettingEntity("special_050_060", "500")
-                        )
-                    )
-                    // Seed default admin user
-                    database.userDao().insertUser(
-                        UserEntity(
-                            email = "admin@hemp.com",
-                            name = "Admin",
-                            passwordHash = "admin123"
-                        )
-                    )
-                }
             }
         }
     }

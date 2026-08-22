@@ -43,7 +43,7 @@ class MainActivity : ComponentActivity() {
                     val customersVm: CustomersViewModel = viewModel { CustomersViewModel(custRepo) }
                     val stockVm: StockViewModel = viewModel { StockViewModel(invRepo) }
                     val transVm: TransactionsViewModel = viewModel { TransactionsViewModel(invRepo) }
-                    val settingsVm: SettingsViewModel = viewModel { SettingsViewModel(setRepo) }
+                    val settingsVm: SettingsViewModel = viewModel { SettingsViewModel(setRepo, invRepo) }
 
                     GramFlowNavGraph(
                         authViewModel = authVm,

@@ -1,9 +1,12 @@
 package com.gramflow.app.ui.screens.addsale
 
 import android.widget.Toast
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -28,7 +31,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Calculate
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -72,7 +77,10 @@ fun AddSaleScreen(
     val customers by viewModel.customers.collectAsState()
     val totalStock by viewModel.totalStock.collectAsState()
     val batches by viewModel.batches.collectAsState()
+    val settings by viewModel.settings.collectAsState()
     val isSubmitting by viewModel.isSubmitting.collectAsState()
+    val computation by viewModel.computation.collectAsState()
+    val lastSaleSummary by viewModel.lastSaleSummary.collectAsState()
 
     val selectedCustomerId by viewModel.selectedCustomerId.collectAsState()
     val gramsText by viewModel.gramsText.collectAsState()
@@ -81,11 +89,15 @@ fun AddSaleScreen(
     val selectedBatchId by viewModel.selectedBatchId.collectAsState()
     val commentsText by viewModel.commentsText.collectAsState()
 
+    val overrideRate by viewModel.overrideRatePerGram.collectAsState()
+    val override025 by viewModel.overrideSpecial025.collectAsState()
+    val override050 by viewModel.overrideSpecial050.collectAsState()
+
     var customerDropdownExpanded by remember { mutableStateOf(false) }
     var batchDropdownExpanded by remember { mutableStateOf(false) }
+    var showOverrides by remember { mutableStateOf(false) }
     var showSuccessModal by remember { mutableStateOf(false) }
 
-    val (gross, finalAmount, balance) = viewModel.calculateComputation()
     val selectedCustomer = customers.find { it.id == selectedCustomerId }
 
     Column(
@@ -103,7 +115,7 @@ fun AddSaleScreen(
             color = TextPrimary
         )
         Text(
-            text = "FIFO deductions executed automatically.",
+            text = "Register transaction details. Deductions execute via strict FIFO lineage.",
             fontSize = 13.sp,
             color = TextSecondary,
             modifier = Modifier.padding(bottom = 16.dp)
@@ -133,7 +145,7 @@ fun AddSaleScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = selectedCustomer?.name ?: "-- Select Customer --",
+                            text = selectedCustomer?.let { "${it.name} ${if (it.phone != null) "(${it.phone})" else ""}" } ?: "-- Select Customer --",
                             color = if (selectedCustomer != null) TextPrimary else TextMuted,
                             fontSize = 14.sp
                         )
@@ -179,8 +191,93 @@ fun AddSaleScreen(
 
                 Spacer(modifier = Modifier.height(14.dp))
 
+                // Dynamic Rate Overrides Accordion
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(BgSubtle)
+                        .border(1.dp, BorderSubtle, RoundedCornerShape(12.dp))
+                        .clickable { showOverrides = !showOverrides }
+                        .padding(12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Tune, contentDescription = null, tint = AccentLime, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Dynamic Rate Overrides (Optional)", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = TextPrimary)
+                        }
+                        Icon(
+                            imageVector = if (showOverrides) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                            contentDescription = null,
+                            tint = TextMuted
+                        )
+                    }
+                }
+
+                AnimatedVisibility(
+                    visible = showOverrides,
+                    enter = expandVertically(),
+                    exit = shrinkVertically()
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 10.dp)
+                    ) {
+                        Text("Rate Per Gram (₹)", fontSize = 12.sp, fontWeight = FontWeight.Medium, color = TextSecondary)
+                        Spacer(modifier = Modifier.height(2.dp))
+                        OutlinedTextField(
+                            value = overrideRate,
+                            onValueChange = { viewModel.overrideRatePerGram.value = it },
+                            placeholder = { Text("Default: ₹${settings.ratePerGram.toInt()}") },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(10.dp),
+                            singleLine = true
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("0.25g - 0.30g Bracket", fontSize = 11.sp, color = TextSecondary)
+                                Spacer(modifier = Modifier.height(2.dp))
+                                OutlinedTextField(
+                                    value = override025,
+                                    onValueChange = { viewModel.overrideSpecial025.value = it },
+                                    placeholder = { Text("₹${settings.special025.toInt()}") },
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(10.dp),
+                                    singleLine = true
+                                )
+                            }
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("0.50g - 0.60g Bracket", fontSize = 11.sp, color = TextSecondary)
+                                Spacer(modifier = Modifier.height(2.dp))
+                                OutlinedTextField(
+                                    value = override050,
+                                    onValueChange = { viewModel.overrideSpecial050.value = it },
+                                    placeholder = { Text("₹${settings.special050.toInt()}") },
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(10.dp),
+                                    singleLine = true
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
                 // Discount
-                Text("Discount (₹)", fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = TextPrimary)
+                Text("Manual Discount (₹)", fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = TextPrimary)
                 Spacer(modifier = Modifier.height(4.dp))
                 OutlinedTextField(
                     value = discountText,
@@ -194,8 +291,29 @@ fun AddSaleScreen(
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                // Amount Received
-                Text("Amount Received (₹) *", fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = TextPrimary)
+                // Amount Received with Quick "Full Pay" action
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Amount Received (₹) *", fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = TextPrimary)
+                    if (computation.finalAmount > 0) {
+                        Text(
+                            text = "Fill ₹${computation.finalAmount.toInt()}",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = AccentLime,
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(BgSubtle)
+                                .clickable {
+                                    viewModel.amountReceivedText.value = computation.finalAmount.toInt().toString()
+                                }
+                                .padding(horizontal = 8.dp, vertical = 2.dp)
+                        )
+                    }
+                }
                 Spacer(modifier = Modifier.height(4.dp))
                 OutlinedTextField(
                     value = amountReceivedText,
@@ -210,7 +328,7 @@ fun AddSaleScreen(
                 Spacer(modifier = Modifier.height(14.dp))
 
                 // Batch Selection
-                Text("Batch Assignment", fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = TextPrimary)
+                Text("Stock Batch Assignment", fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = TextPrimary)
                 Spacer(modifier = Modifier.height(4.dp))
                 Box(
                     modifier = Modifier
@@ -227,7 +345,7 @@ fun AddSaleScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = if (activeBatch != null) "Batch #${activeBatch.id} (${activeBatch.remainingGrams}g)" else "Auto-Pilot (FIFO / Oldest First)",
+                            text = if (activeBatch != null) "Batch #${activeBatch.id} (${activeBatch.remainingGrams}g remaining)" else "Auto-Pilot (FIFO / Oldest First)",
                             color = TextPrimary,
                             fontSize = 14.sp
                         )
@@ -260,12 +378,12 @@ fun AddSaleScreen(
                 Spacer(modifier = Modifier.height(14.dp))
 
                 // Comments
-                Text("Notes / Comments", fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = TextPrimary)
+                Text("Comments / Notes", fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = TextPrimary)
                 Spacer(modifier = Modifier.height(4.dp))
                 OutlinedTextField(
                     value = commentsText,
                     onValueChange = { viewModel.commentsText.value = it },
-                    placeholder = { Text("Special transaction notes...") },
+                    placeholder = { Text("Notes regarding this transaction...") },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     maxLines = 2
@@ -275,7 +393,7 @@ fun AddSaleScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Live Computation Card
+        // Live Computation Summary Card
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(20.dp),
@@ -283,7 +401,7 @@ fun AddSaleScreen(
         ) {
             Column(modifier = Modifier.padding(20.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Calculate, contentDescription = null, tint = TextPrimary, modifier = Modifier.size(18.dp))
+                    Icon(Icons.Default.Calculate, contentDescription = null, tint = AccentLime, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(6.dp))
                     Text("Live Computation", fontWeight = FontWeight.Bold, fontSize = 15.sp, color = TextPrimary)
                 }
@@ -291,22 +409,34 @@ fun AddSaleScreen(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text("Gross Output", fontSize = 13.sp, color = TextSecondary)
-                    Text("₹${"%.2f".format(gross)}", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, fontFamily = FontFamily.Monospace)
+                    Text("Gross Amount", fontSize = 13.sp, color = TextSecondary)
+                    Text("₹${"%.2f".format(computation.gross)}", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, fontFamily = FontFamily.Monospace)
                 }
 
                 Spacer(modifier = Modifier.height(6.dp))
 
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text("Discount Adjusted", fontSize = 13.sp, color = TextSecondary)
-                    Text("-₹${"%.2f".format(discountText.toDoubleOrNull() ?: 0.0)}", fontSize = 14.sp, color = DangerRed, fontWeight = FontWeight.SemiBold, fontFamily = FontFamily.Monospace)
+                    Text("Discount Applied", fontSize = 13.sp, color = TextSecondary)
+                    Text(
+                        text = if (computation.discount > 0) "-₹${"%.2f".format(computation.discount)}" else "₹0.00",
+                        fontSize = 14.sp,
+                        color = if (computation.discount > 0) DangerRed else TextPrimary,
+                        fontWeight = FontWeight.SemiBold,
+                        fontFamily = FontFamily.Monospace
+                    )
                 }
 
                 HorizontalDivider(modifier = Modifier.padding(vertical = 10.dp), color = BorderSubtle)
 
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     Text("Final Billing", fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                    Text("₹${"%.2f".format(finalAmount)}", fontSize = 20.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, color = TextPrimary)
+                    Text(
+                        text = "₹${"%.2f".format(computation.finalAmount)}",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily.Monospace,
+                        color = AccentLime
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(10.dp))
@@ -320,13 +450,13 @@ fun AddSaleScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Remaining Balance (Loan)", fontSize = 12.sp, color = TextSecondary)
+                    Text("Remaining Loan Debt", fontSize = 12.sp, color = TextSecondary)
                     Text(
-                        text = "₹${"%.2f".format(balance)}",
+                        text = "₹${"%.2f".format(computation.balance)}",
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
                         fontFamily = FontFamily.Monospace,
-                        color = if (balance > 0) WarningAmber else SuccessGreen
+                        color = if (computation.balance > 0) WarningAmber else SuccessGreen
                     )
                 }
 
@@ -347,7 +477,7 @@ fun AddSaleScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(54.dp),
-                    enabled = !isSubmitting,
+                    enabled = !isSubmitting && customers.isNotEmpty(),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = AccentLime,
                         contentColor = BgDark,
@@ -369,8 +499,9 @@ fun AddSaleScreen(
         Spacer(modifier = Modifier.height(40.dp))
     }
 
-    // Animated Success Modal
-    if (showSuccessModal) {
+    // Animated Success Modal with Exact Saved Values
+    if (showSuccessModal && lastSaleSummary != null) {
+        val summary = lastSaleSummary!!
         val scaleAnim = remember { Animatable(0.2f) }
 
         LaunchedEffect(Unit) {
@@ -381,7 +512,7 @@ fun AddSaleScreen(
                     stiffness = Spring.StiffnessLow
                 )
             )
-            delay(1800)
+            delay(2200)
             showSuccessModal = false
             onSaleCompleted()
         }
@@ -398,7 +529,7 @@ fun AddSaleScreen(
                     .scale(scaleAnim.value)
             ) {
                 Column(
-                    modifier = Modifier.padding(28.dp),
+                    modifier = Modifier.padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     // Pulsing Checkmark Circle
@@ -418,10 +549,10 @@ fun AddSaleScreen(
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(18.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
                     Text(
-                        text = "Sale Processed!",
+                        text = "Transaction Finalized!",
                         fontWeight = FontWeight.Bold,
                         fontSize = 20.sp,
                         color = TextPrimary
@@ -431,10 +562,10 @@ fun AddSaleScreen(
                         text = "Stock batches deducted & ledger updated.",
                         fontSize = 12.sp,
                         color = TextSecondary,
-                        modifier = Modifier.padding(top = 4.dp, bottom = 18.dp)
+                        modifier = Modifier.padding(top = 4.dp, bottom = 16.dp)
                     )
 
-                    // Summary details pill
+                    // Summary details breakdown
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -447,7 +578,7 @@ fun AddSaleScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text("Customer", fontSize = 12.sp, color = TextSecondary)
-                            Text(selectedCustomer?.name ?: "Customer", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = TextPrimary)
+                            Text(summary.customerName, fontWeight = FontWeight.Bold, fontSize = 13.sp, color = TextPrimary)
                         }
                         Spacer(modifier = Modifier.height(6.dp))
                         Row(
@@ -455,19 +586,59 @@ fun AddSaleScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text("Weight Sold", fontSize = 12.sp, color = TextSecondary)
-                            Text("${gramsText}g", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = TextPrimary)
+                            Text("${"%.2f".format(summary.gramsSold)}g", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = TextPrimary)
                         }
                         Spacer(modifier = Modifier.height(6.dp))
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text("Billed Amount", fontSize = 12.sp, color = TextSecondary)
-                            Text("₹${"%.2f".format(finalAmount)}", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = TextPrimary, fontFamily = FontFamily.Monospace)
+                            Text("Gross Amount", fontSize = 12.sp, color = TextSecondary)
+                            Text("₹${"%.2f".format(summary.grossAmount)}", fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = TextPrimary, fontFamily = FontFamily.Monospace)
+                        }
+                        if (summary.discount > 0) {
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text("Discount Applied", fontSize = 12.sp, color = TextSecondary)
+                                Text("-₹${"%.2f".format(summary.discount)}", fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = DangerRed, fontFamily = FontFamily.Monospace)
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text("Final Billing", fontSize = 12.sp, color = TextSecondary)
+                            Text("₹${"%.2f".format(summary.finalAmount)}", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = AccentLime, fontFamily = FontFamily.Monospace)
+                        }
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text("Amount Received", fontSize = 12.sp, color = TextSecondary)
+                            Text("₹${"%.2f".format(summary.amountReceived)}", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = TextPrimary, fontFamily = FontFamily.Monospace)
+                        }
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text("Remaining Debt", fontSize = 12.sp, color = TextSecondary)
+                            Text(
+                                text = if (summary.balance > 0) "₹${"%.2f".format(summary.balance)} (Loan)" else "₹0.00 (Settled)",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 13.sp,
+                                color = if (summary.balance > 0) WarningAmber else SuccessGreen,
+                                fontFamily = FontFamily.Monospace
+                            )
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(20.dp))
+                    Spacer(modifier = Modifier.height(18.dp))
 
                     Button(
                         onClick = {
@@ -478,12 +649,12 @@ fun AddSaleScreen(
                             .fillMaxWidth()
                             .height(48.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = BgDark,
-                            contentColor = AccentLime
+                            containerColor = AccentLime,
+                            contentColor = BgDark
                         ),
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text("Return to Dashboard", fontWeight = FontWeight.Bold, color = AccentLime)
+                        Text("Return to Dashboard", fontWeight = FontWeight.Bold, color = BgDark)
                     }
                 }
             }

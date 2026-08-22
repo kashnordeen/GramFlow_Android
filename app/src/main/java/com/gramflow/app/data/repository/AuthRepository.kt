@@ -5,6 +5,7 @@ import com.gramflow.app.data.local.entity.UserEntity
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import org.mindrot.jbcrypt.BCrypt
 import java.security.MessageDigest
 
 class AuthRepository(private val userDao: UserDao) {
@@ -49,9 +50,9 @@ class AuthRepository(private val userDao: UserDao) {
         val user = userDao.getUserByEmail(trimmedEmail)
             ?: return Result.failure(Exception("Invalid email or password."))
 
-        // Check password
-        val inputHash = hashPassword(passwordRaw)
-        if (user.passwordHash != inputHash && user.passwordHash != passwordRaw) {
+        // Multi-format Password Verification
+        val isPasswordValid = verifyPassword(passwordRaw, user.passwordHash)
+        if (!isPasswordValid) {
             return Result.failure(Exception("Invalid email or password."))
         }
 
@@ -91,8 +92,8 @@ class AuthRepository(private val userDao: UserDao) {
         val user = userDao.getUserByEmail(email)
             ?: return Result.failure(Exception("User not found."))
 
-        val currentHash = hashPassword(currentPassword)
-        if (user.passwordHash != currentHash && user.passwordHash != currentPassword) {
+        val isCurrentPassValid = verifyPassword(currentPassword, user.passwordHash)
+        if (!isCurrentPassValid) {
             return Result.failure(Exception("Incorrect current password."))
         }
 
@@ -104,6 +105,30 @@ class AuthRepository(private val userDao: UserDao) {
         _sessionUser.value = updated
         recordActivity()
         return Result.success(Unit)
+    }
+
+    private fun verifyPassword(raw: String, storedHash: String): Boolean {
+        // 1. Direct match (plain text)
+        if (storedHash == raw) return true
+
+        // 2. SHA-256 hash match
+        if (storedHash == hashPassword(raw)) return true
+
+        // 3. BCrypt hash match ($2a$, $2b$, $2y$)
+        if (storedHash.startsWith("$2a$") || storedHash.startsWith("$2b$") || storedHash.startsWith("$2y$")) {
+            try {
+                val compatibleHash = if (storedHash.startsWith("$2b$") || storedHash.startsWith("$2y$")) {
+                    "$2a$" + storedHash.substring(4)
+                } else {
+                    storedHash
+                }
+                return BCrypt.checkpw(raw, compatibleHash)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+
+        return false
     }
 
     private fun hashPassword(password: String): String {

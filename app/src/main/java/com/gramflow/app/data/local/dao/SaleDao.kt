@@ -16,6 +16,9 @@ interface SaleDao {
     @Query("SELECT * FROM sales ORDER BY createdAt DESC")
     fun getAllSalesFlow(): Flow<List<SaleEntity>>
 
+    @Query("SELECT * FROM sales ORDER BY createdAt DESC")
+    suspend fun getAllSales(): List<SaleEntity>
+
     @Query("SELECT * FROM sales ORDER BY createdAt DESC LIMIT :limit")
     fun getRecentSalesFlow(limit: Int = 10): Flow<List<SaleEntity>>
 

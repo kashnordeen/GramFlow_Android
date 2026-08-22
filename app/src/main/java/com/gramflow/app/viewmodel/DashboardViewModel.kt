@@ -1,11 +1,14 @@
 package com.gramflow.app.viewmodel
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gramflow.app.data.local.entity.UserEntity
 import com.gramflow.app.data.repository.AuthRepository
 import com.gramflow.app.data.repository.DashboardMetrics
 import com.gramflow.app.data.repository.InventoryRepository
+import com.gramflow.app.util.DatabaseBackupManager
+import com.gramflow.app.util.PdfGenerator
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -56,5 +59,20 @@ class DashboardViewModel(
                 onResult(false, res.exceptionOrNull()?.message)
             }
         }
+    }
+
+    fun exportMasterPdf(context: Context) {
+        viewModelScope.launch {
+            val sales = inventoryRepo.getAllSales()
+            val customers = inventoryRepo.getAllCustomers()
+            val totalStock = inventoryRepo.getTotalStock()
+            val totalDebt = customers.sumOf { it.oldLoan + it.totalLoan }
+            val totalRevenue = sales.sumOf { it.amountReceived }
+            PdfGenerator.generateMasterLedgerPdf(context, sales, customers, totalStock, totalDebt, totalRevenue)
+        }
+    }
+
+    fun backupDatabase(context: Context) {
+        DatabaseBackupManager.createEncryptedBackup(context, inventoryRepo.database)
     }
 }
