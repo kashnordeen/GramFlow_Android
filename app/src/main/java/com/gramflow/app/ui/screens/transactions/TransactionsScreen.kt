@@ -21,9 +21,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.Notes
 import androidx.compose.material.icons.filled.Restore
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
@@ -376,7 +376,7 @@ fun TransactionsScreen(
                                         .background(BgSubtle)
                                         .padding(horizontal = 8.dp, vertical = 4.dp)
                                 ) {
-                                    Icon(Icons.Default.Notes, contentDescription = null, tint = TextMuted, modifier = Modifier.size(13.dp))
+                                    Icon(Icons.AutoMirrored.Filled.Notes, contentDescription = null, tint = TextMuted, modifier = Modifier.size(13.dp))
                                     Spacer(modifier = Modifier.width(6.dp))
                                     Text(sale.comments, fontSize = 11.sp, color = TextSecondary, maxLines = 1)
                                 }

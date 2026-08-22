@@ -30,9 +30,8 @@ object PdfGenerator {
         try {
             val document = PdfDocument()
             val pageInfo = PdfDocument.PageInfo.Builder(595, 842, 1).create() // A4
-            var pageNumber = 1
-            var page = document.startPage(pageInfo)
-            var canvas = page.canvas
+            val page = document.startPage(pageInfo)
+            val canvas = page.canvas
 
             val paint = Paint()
             val dateFormat = SimpleDateFormat("MMM d, yyyy · hh:mm a", Locale.getDefault())

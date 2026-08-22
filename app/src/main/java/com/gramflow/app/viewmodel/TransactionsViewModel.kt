@@ -2,7 +2,6 @@ package com.gramflow.app.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.gramflow.app.data.local.entity.SaleBatchAssignmentEntity
 import com.gramflow.app.data.local.entity.SaleEntity
 import com.gramflow.app.data.repository.InventoryRepository
 import kotlinx.coroutines.flow.MutableStateFlow
