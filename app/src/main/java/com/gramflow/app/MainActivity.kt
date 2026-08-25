@@ -1,5 +1,6 @@
 package com.gramflow.app
 
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -23,6 +24,9 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Force maximum display refresh rate (120Hz / 90Hz / 144Hz)
+        enableHighRefreshRate()
 
         val app = application as GramFlowApp
         val authRepo = app.authRepository
@@ -56,6 +60,31 @@ class MainActivity : ComponentActivity() {
                     )
                 }
             }
+        }
+    }
+
+    private fun enableHighRefreshRate() {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                val modes = display?.supportedModes ?: emptyArray()
+                val highRateMode = modes.maxByOrNull { it.refreshRate }
+                if (highRateMode != null && highRateMode.refreshRate > 60f) {
+                    window.attributes = window.attributes.apply {
+                        preferredDisplayModeId = highRateMode.modeId
+                    }
+                }
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                @Suppress("DEPRECATION")
+                val modes = windowManager.defaultDisplay.supportedModes
+                val highRateMode = modes.maxByOrNull { it.refreshRate }
+                if (highRateMode != null && highRateMode.refreshRate > 60f) {
+                    window.attributes = window.attributes.apply {
+                        preferredDisplayModeId = highRateMode.modeId
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 }

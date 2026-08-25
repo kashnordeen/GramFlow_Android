@@ -276,14 +276,14 @@ fun CustomersScreen(
                                         modifier = Modifier
                                             .size(40.dp)
                                             .clip(CircleShape)
-                                            .background(if (combinedDebt > 0) WarningAmber.copy(alpha = 0.2f) else AccentLime.copy(alpha = 0.2f)),
+                                            .background(if (combinedDebt > 0) WarningBg else BadgeGreenBg),
                                         contentAlignment = Alignment.Center
                                     ) {
                                         Text(
                                             text = customer.name.take(1).uppercase(),
                                             fontWeight = FontWeight.Bold,
                                             fontSize = 17.sp,
-                                            color = if (combinedDebt > 0) WarningAmber else AccentLime
+                                            color = if (combinedDebt > 0) WarningAmber else BadgeGreenText
                                         )
                                     }
 
@@ -299,7 +299,7 @@ fun CustomersScreen(
                                                     context.startActivity(intent)
                                                 }
                                             ) {
-                                                Icon(Icons.Default.Call, contentDescription = "Call", tint = AccentLime, modifier = Modifier.size(12.dp))
+                                                Icon(Icons.Default.Call, contentDescription = "Call", tint = BrandGreen, modifier = Modifier.size(12.dp))
                                                 Spacer(modifier = Modifier.width(4.dp))
                                                 Text(customer.phone, fontSize = 12.sp, color = TextSecondary)
                                             }
@@ -324,10 +324,10 @@ fun CustomersScreen(
                                         Box(
                                             modifier = Modifier
                                                 .clip(RoundedCornerShape(8.dp))
-                                                .background(SuccessGreen.copy(alpha = 0.15f))
+                                                .background(BadgeGreenBg)
                                                 .padding(horizontal = 8.dp, vertical = 4.dp)
                                         ) {
-                                            Text("No Debt", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = SuccessGreen)
+                                            Text("No Debt", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = BadgeGreenText)
                                         }
                                     }
                                 }
@@ -370,9 +370,9 @@ fun CustomersScreen(
                                         }
                                         .padding(horizontal = 6.dp, vertical = 4.dp)
                                 ) {
-                                    Icon(Icons.Default.Description, contentDescription = "Statement", tint = AccentLime, modifier = Modifier.size(15.dp))
+                                    Icon(Icons.Default.Description, contentDescription = "Statement", tint = BrandGreen, modifier = Modifier.size(15.dp))
                                     Spacer(modifier = Modifier.width(4.dp))
-                                    Text("Statement", fontSize = 12.sp, color = AccentLime, fontWeight = FontWeight.SemiBold)
+                                    Text("Statement", fontSize = 12.sp, color = BrandGreen, fontWeight = FontWeight.SemiBold)
                                 }
 
                                 Row(

@@ -76,7 +76,7 @@ fun SettingsScreen(
         ) {
             Column(modifier = Modifier.padding(20.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Tune, contentDescription = null, tint = AccentLime, modifier = Modifier.size(20.dp))
+                    Icon(Icons.Default.Tune, contentDescription = null, tint = BrandGreen, modifier = Modifier.size(20.dp))
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Global Pricing Rules", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = TextPrimary)
                 }
@@ -165,7 +165,7 @@ fun SettingsScreen(
         ) {
             Column(modifier = Modifier.padding(20.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Security, contentDescription = null, tint = AccentLime, modifier = Modifier.size(20.dp))
+                    Icon(Icons.Default.Security, contentDescription = null, tint = BrandGreen, modifier = Modifier.size(20.dp))
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Data & Security Management", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = TextPrimary)
                 }
@@ -194,10 +194,10 @@ fun SettingsScreen(
                             modifier = Modifier
                                 .size(40.dp)
                                 .clip(CircleShape)
-                                .background(AccentLime.copy(alpha = 0.15f)),
+                                .background(BadgeGreenBg),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(Icons.Default.Description, contentDescription = null, tint = AccentLime, modifier = Modifier.size(22.dp))
+                            Icon(Icons.Default.Description, contentDescription = null, tint = BrandGreen, modifier = Modifier.size(22.dp))
                         }
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {

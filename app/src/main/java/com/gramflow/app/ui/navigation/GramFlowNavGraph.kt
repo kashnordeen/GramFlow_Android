@@ -1,7 +1,5 @@
 package com.gramflow.app.ui.navigation
 
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -11,7 +9,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -95,12 +92,6 @@ fun GramFlowNavGraph(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .pointerInput(Unit) {
-                    awaitEachGesture {
-                        awaitFirstDown(requireUnconsumed = false)
-                        authViewModel.recordActivity()
-                    }
-                }
         ) {
             NavHost(
                 navController = navController,

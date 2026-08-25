@@ -207,7 +207,7 @@ fun AddSaleScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Tune, contentDescription = null, tint = AccentLime, modifier = Modifier.size(16.dp))
+                            Icon(Icons.Default.Tune, contentDescription = null, tint = BrandGreen, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(8.dp))
                             Text("Dynamic Rate Overrides (Optional)", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = TextPrimary)
                         }
@@ -303,10 +303,10 @@ fun AddSaleScreen(
                             text = "Fill ₹${computation.finalAmount.toInt()}",
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
-                            color = AccentLime,
+                            color = BadgeGreenText,
                             modifier = Modifier
                                 .clip(RoundedCornerShape(6.dp))
-                                .background(BgSubtle)
+                                .background(BadgeGreenBg)
                                 .clickable {
                                     viewModel.amountReceivedText.value = computation.finalAmount.toInt().toString()
                                 }
@@ -612,7 +612,7 @@ fun AddSaleScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text("Final Billing", fontSize = 12.sp, color = TextSecondary)
-                            Text("₹${"%.2f".format(summary.finalAmount)}", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = AccentLime, fontFamily = FontFamily.Monospace)
+                            Text("₹${"%.2f".format(summary.finalAmount)}", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = BrandGreen, fontFamily = FontFamily.Monospace)
                         }
                         Spacer(modifier = Modifier.height(6.dp))
                         Row(

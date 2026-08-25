@@ -97,14 +97,14 @@ fun TransactionsScreen(
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(10.dp))
-                    .background(BgSurface)
+                    .background(BadgeGreenBg)
                     .padding(horizontal = 10.dp, vertical = 6.dp)
             ) {
                 Text(
                     text = "${allSales.size} Records",
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
-                    color = AccentLime
+                    color = BadgeGreenText
                 )
             }
         }

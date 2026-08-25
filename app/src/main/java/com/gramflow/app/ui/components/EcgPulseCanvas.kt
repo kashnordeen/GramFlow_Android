@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
@@ -39,30 +40,32 @@ fun EcgPulseCanvas(
         label = "ecgPhase"
     )
 
+    val cachedPath = remember { Path() }
+    val dashIntervals = remember { floatArrayOf(200f, 200f) }
+
     Canvas(modifier = modifier) {
         val w = size.width
         val h = size.height
         val midY = h / 2
 
-        val path = Path().apply {
-            moveTo(0f, midY)
-            lineTo(w * 0.25f, midY)
-            lineTo(w * 0.32f, h * 0.15f)
-            lineTo(w * 0.42f, h * 0.85f)
-            lineTo(w * 0.52f, h * 0.30f)
-            lineTo(w * 0.60f, h * 0.65f)
-            lineTo(w * 0.68f, midY)
-            lineTo(w, midY)
-        }
+        cachedPath.reset()
+        cachedPath.moveTo(0f, midY)
+        cachedPath.lineTo(w * 0.25f, midY)
+        cachedPath.lineTo(w * 0.32f, h * 0.15f)
+        cachedPath.lineTo(w * 0.42f, h * 0.85f)
+        cachedPath.lineTo(w * 0.52f, h * 0.30f)
+        cachedPath.lineTo(w * 0.60f, h * 0.65f)
+        cachedPath.lineTo(w * 0.68f, midY)
+        cachedPath.lineTo(w, midY)
 
         drawPath(
-            path = path,
+            path = cachedPath,
             color = color,
             style = Stroke(
                 width = 2.5.dp.toPx(),
                 cap = StrokeCap.Round,
                 join = StrokeJoin.Round,
-                pathEffect = PathEffect.dashPathEffect(floatArrayOf(200f, 200f), phase)
+                pathEffect = PathEffect.dashPathEffect(dashIntervals, phase)
             )
         )
     }
